@@ -8,17 +8,19 @@
 /*   functions with GCode M998 on your ATmega                                 */
 /* ========================================================================== */
 
+//you need to include new_mathematics.h to use this code
     case 998: //M998 Test accuracy and measure math-speed
     {
       float saveresult;
       MarlinSerial ms;
       SERIAL_ECHOLN("Performing Math-tests...");
-      
+
+      float accuracy_factor = 1; //change this to enlarge/reduce test-range      
       SERIAL_ECHOLN("  1. Accuracy");
       SERIAL_ECHOLN("  1.1 SQRT(float)   float;fsqrt;sqrt");
-      for (int i=1; i <= 1000; i++)
+      for (int i=1; i <= 100*accuracy_factor; i++)
       {
-        saveresult = (float)i/10;
+        saveresult = (float)i/(accuracy_factor*10);
         SERIAL_ECHO("    ");
         ms.printFloat(saveresult,8);
         SERIAL_ECHO(";");
@@ -28,9 +30,9 @@
         SERIAL_ECHOLN("");
       }
       SERIAL_ECHOLN("  1.2 fsin(deg)   deg;fsin;sin");
-      for (int i=1; i <= 3600; i++)
+      for (int i=1; i <= 360*accuracy_factor; i++)
       {
-        float actdeg = (float)i/10;
+        float actdeg = (float)i/accuracy_factor;
         SERIAL_ECHO("    SIN(");
         ms.printFloat(actdeg,8);
         SERIAL_ECHO(");");
@@ -40,9 +42,9 @@
         SERIAL_ECHOLN("");
       }
       SERIAL_ECHOLN("  1.3 fcos(deg)   deg;fcos;cos");
-      for (int i=1; i <= 3600; i++)
+      for (int i=1; i <= 360*accuracy_factor; i++)
       {
-        float actdeg = (float)i/10;
+        float actdeg = (float)i/accuracy_factor;
         SERIAL_ECHO("    COS(");
         ms.printFloat(actdeg,8);
         SERIAL_ECHO(");");
@@ -52,9 +54,9 @@
         SERIAL_ECHOLN("");
       }
       SERIAL_ECHOLN("  1.4 ftan(deg)   deg;ftan;tan");
-      for (int i=1; i <= 3600; i++)
+      for (int i=1; i <= 360*accuracy_factor; i++)
       {
-        float actdeg = (float)i/10;
+        float actdeg = (float)i/accuracy_factor;
         SERIAL_ECHO("    TAN(");
         ms.printFloat(actdeg,8);
         SERIAL_ECHO(");");
@@ -139,5 +141,7 @@
       SERIAL_ECHO(" s;");
       ms.printFloat((stoptime2-starttime2)/1000,8);
       SERIAL_ECHOLN(" s");
+      saveresult-=saveresult;
+      SERIAL_ECHOLN(saveresult); //this is needed to fool compiler optimization
     }
     break;
