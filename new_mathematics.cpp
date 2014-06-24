@@ -23,7 +23,9 @@
 */
 
 #include "new_mathematics.h"
-#include "Arduino.h"
+#include <stdlib.h>
+#include <math.h>
+#include "Configuration.h"
 #include "math_tables.h"
 
 float rad2deg(float rad)
@@ -53,16 +55,27 @@ float get_ndeg(float deg)
   else {return deg;}
 }//float get_ndeg(float deg)
 
+#ifdef MATH_SPEED_LEVEL_I
 float fsin(float deg)
 {
   float ndeg = get_ndeg(deg);
   float sign = 1;
   union {float flt; unsigned long lng;} cvt;
+#ifdef MATH_SPEED_LEVEL_III
   if (ndeg > 270) {cvt.lng = pgm_read_dword(&SIN_TABLE[900-(int)((ndeg-270)*10)]); sign = -1;}
   else {if (ndeg > 180) {cvt.lng = pgm_read_dword(&SIN_TABLE[(int)((ndeg-180)*10)]); sign = -1;}
   else {if (ndeg > 90) {cvt.lng = pgm_read_dword(&SIN_TABLE[900-(int)((ndeg-90)*10)]);}
   else {cvt.lng = pgm_read_dword(&SIN_TABLE[(int)(ndeg*10)]);}}}
   return cvt.flt*sign;
+#elif (defined MATH_SPEED_LEVEL_II) || (defined MATH_SPEED_LEVEL_I)
+  if (ndeg > 270) {cvt.lng = pgm_read_dword(&SIN_TABLE[(450-(int)((ndeg-270)*5)])); sign = -1;}
+  else {if (ndeg > 180) {cvt.lng = pgm_read_dword(&SIN_TABLE[(int)((ndeg-180)*5))]); sign = -1;}
+  else {if (ndeg > 90) {cvt.lng = pgm_read_dword(&SIN_TABLE[450-(int)((ndeg-90)*5)]);}
+  else {cvt.lng = pgm_read_dword(&SIN_TABLE[(int)(ndeg*5)]);}}}
+  return cvt.flt*sign;
+#else
+  return sin(deg);
+#endif  
 } //float fsin(float deg)
 
 float fcos(float deg)
@@ -70,11 +83,21 @@ float fcos(float deg)
   float ndeg = get_ndeg(deg);
   float sign = 1;
   union {float flt; unsigned long lng;} cvt;
+#ifdef MATH_SPEED_LEVEL_III
   if (ndeg > 270) {cvt.lng = pgm_read_dword(&SIN_TABLE[(int)((ndeg-270)*10)]);}
   else {if (ndeg > 180) {cvt.lng = pgm_read_dword(&SIN_TABLE[900-(int)((ndeg-180)*10)]); sign = -1;}
   else {if (ndeg > 90) {cvt.lng = pgm_read_dword(&SIN_TABLE[(int)((ndeg-90)*10)]);sign = -1;}
   else {cvt.lng = pgm_read_dword(&SIN_TABLE[900-(int)(ndeg*10)]);}}}
   return cvt.flt*sign;
+#elif (defined MATH_SPEED_LEVEL_II) || (defined MATH_SPEED_LEVEL_I)
+  if (ndeg > 270) {cvt.lng = pgm_read_dword(&SIN_TABLE[(int)((ndeg-270)*5)]);}
+  else {if (ndeg > 180) {cvt.lng = pgm_read_dword(&SIN_TABLE[450-(int)((ndeg-180)*5)]); sign = -1;}
+  else {if (ndeg > 90) {cvt.lng = pgm_read_dword(&SIN_TABLE[(int)((ndeg-90)*5)]);sign = -1;}
+  else {cvt.lng = pgm_read_dword(&SIN_TABLE[450-(int)(ndeg*5)]);}}}
+  return cvt.flt*sign;
+#else
+  return sin(deg);
+#endif  
 } //float fcos(float deg)
 
 
@@ -83,35 +106,23 @@ float ftan(float deg)
   float ndeg = get_ndeg(deg);
   float sign = 1;
   union {float flt; unsigned long lng;} cvt;
+#ifdef MATH_SPEED_LEVEL_III
   if (ndeg > 270) {cvt.lng = pgm_read_dword(&TAN_TABLE[900-(int)((ndeg-270)*10)]); sign = -1;}
   else {if (ndeg > 180) {cvt.lng = pgm_read_dword(&TAN_TABLE[(int)((ndeg-180)*10)]); sign = -1;}
   else {if (ndeg > 90) {cvt.lng = pgm_read_dword(&TAN_TABLE[900-(int)((ndeg-90)*10)]);}
   else {cvt.lng = pgm_read_dword(&TAN_TABLE[(int)(ndeg*10)]);}}}
   return cvt.flt*sign;
+#elif (defined MATH_SPEED_LEVEL_II) || (defined MATH_SPEED_LEVEL_I)
+  if (ndeg > 270) {cvt.lng = pgm_read_dword(&TAN_TABLE[450-(int)((ndeg-270)*5)]); sign = -1;}
+  else {if (ndeg > 180) {cvt.lng = pgm_read_dword(&TAN_TABLE[(int)((ndeg-180)*5)]); sign = -1;}
+  else {if (ndeg > 90) {cvt.lng = pgm_read_dword(&TAN_TABLE[450-(int)((ndeg-90)*5)]);}
+  else {cvt.lng = pgm_read_dword(&TAN_TABLE[(int)(ndeg*5)]);}}}
+  return cvt.flt*sign;
+#else
+  return sin(deg);
+#endif  
 }//float ftan(float deg)
-
-/*
-float facos(float num)
-{
-//2500-(A2/2)*5000
-  union {float flt; unsigned long lng;} cvt;
-  cvt.lng = pgm_read_dword(&ACOS_TABLE[2500-(int)(num/2)*5000]);
-  return cvt.flt;
-}//float facos(float num)
-
-float fatan2(float opp, float adj)
-{
-
-	float hypt = fsqrt(adj * adj + opp * opp);
-	float rad = facos(adj/hypt);
-
-	if(opp < 0)
-		rad = -rad;
-
-	return rad;
-}//float fatan2(float opp, float adj)
-
-*/
+#endif //MATH_SPEED_LEVEL_I
 
 //You get the square root of a float by halving its exponent, which is equivalent
 // to a single right-shift of the exponent. 
@@ -126,4 +137,24 @@ float fsqrt(float x)
     
     return *(float*)&val_int;
 }//float fsqrt(float x)
+
+#ifdef MATH_SPEED_LEVEL_III
+float facos(float num)
+{
+  union {float flt; unsigned long lng;} cvt;
+  cvt.lng = pgm_read_dword(&ACOS_TABLE[(int)(2500-(num/2)*5000)]);
+  return cvt.flt;
+}//float facos(float num)
+
+float fatan2(float opp, float adj)
+{
+	float hypt = fsqrt(adj * adj + opp * opp);
+	float rad = facos(adj/hypt);
+
+	if(opp < 0)
+		rad = -rad;
+
+	return rad;
+}//float fatan2(float opp, float adj)
+#endif //MATH_SPEED_LEVEL_III
 
